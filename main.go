@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/pkg/errors"
 
@@ -66,6 +65,7 @@ func run() error {
 	}
 	namespaced, err := mapper.IsGVKNamespaced(gvk)
 	if err != nil {
+		fmt.Println(meta.IsNoMatchError(err))
 		panic(errors.Wrapf(err, "failed to detect if gvk %v is namespaced", gvk))
 	}
 	fmt.Println(namespaced)
@@ -80,8 +80,6 @@ func run() error {
 		fmt.Println(err, meta.IsNoMatchError(err), runtime.IsNotRegisteredError(err), runtime.IsMissingKind(err), runtime.IsMissingVersion(err))
 		return err
 	}
-
-	os.Exit(1)
 
 	var ns core.Namespace
 	err = kc.Get(context.TODO(), client.ObjectKey{Name: "kubedb"}, &ns)
