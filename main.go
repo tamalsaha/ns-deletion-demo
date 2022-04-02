@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2/klogr"
+	"kmodules.xyz/client-go/discovery"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -50,6 +54,22 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
+	mapper := discovery.NewResourceMapper(kc.RESTMapper())
+
+	var ul unstructured.UnstructuredList
+	ul.SetAPIVersion("tamal.com/v1")
+	ul.SetKind("Pod")
+	err = kc.List(context.TODO(), &ul)
+	if err != nil {
+		// meta.IsNoMatchError(err)
+		// runtime.IsMissingKind()
+		// runtime.IsNotRegisteredError(err)
+		fmt.Println(err, meta.IsNoMatchError(err), runtime.IsNotRegisteredError(err), runtime.IsMissingKind(err), runtime.IsMissingVersion(err))
+		return err
+	}
+
+	os.Exit(1)
 
 	var ns core.Namespace
 	err = kc.Get(context.TODO(), client.ObjectKey{Name: "kubedb"}, &ns)
