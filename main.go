@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,9 +59,19 @@ func run() error {
 
 	mapper := discovery.NewResourceMapper(kc.RESTMapper())
 
+	gvk := schema.GroupVersionKind{
+		Group:   "tamal.com",
+		Version: "v1",
+		Kind:    "Saha",
+	}
+	namespaced, err := mapper.IsGVKNamespaced(gvk)
+	if err != nil {
+		panic(errors.Wrapf(err, "failed to detect if gvk %v is namespaced", gvk))
+	}
+	fmt.Println(namespaced)
+
 	var ul unstructured.UnstructuredList
-	ul.SetAPIVersion("tamal.com/v1")
-	ul.SetKind("Pod")
+	ul.SetGroupVersionKind(gvk)
 	err = kc.List(context.TODO(), &ul)
 	if err != nil {
 		// meta.IsNoMatchError(err)
